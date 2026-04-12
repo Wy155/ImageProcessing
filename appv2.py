@@ -347,12 +347,6 @@ def load_index(path):
         categories.setdefault(cat, []).append(p)
 
     return index, norm_params, categories
-index, norm_params, categories = load_index(INDEX_FILE)
-
-# DEBUG — remove after fixing
-st.write("DATASET_ROOT:", str(DATASET_ROOT))
-st.write("Categories found:", list(categories.keys()))
-st.write("Sample paths:", list(index.keys())[:3])
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
