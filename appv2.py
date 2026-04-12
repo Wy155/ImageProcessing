@@ -547,9 +547,7 @@ with tab_search:
 
             st.markdown("""
             <style>
-            div.stButton > button {
-                text-align: center;
-                justify-content: center;
+            text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6
             }
             </style>
             """, unsafe_allow_html=True)
