@@ -333,9 +333,11 @@ def load_index(path):
     # Remap old absolute paths → new paths
     index = {}
     for old_path, features in raw_index.items():
-        p = Path(old_path)
-        cat = p.parent.name
-        fname = p.name
+        # Use string replace to handle Windows backslashes on Linux
+        normalized = old_path.replace("\\", "/")
+        parts = normalized.split("/")
+        cat = parts[-2]   # cardboard
+        fname = parts[-1] # cardboard1.jpg
         new_path = str(actual_root / cat / fname)
         index[new_path] = features
 
