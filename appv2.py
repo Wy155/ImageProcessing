@@ -321,15 +321,24 @@ def load_index(path):
     
     raw_index = data['index']
     norm_params = data['norm_params']
-    
-    # Remap old absolute paths → new absolute paths using DATASET_ROOT
+
+    # Find the actual image root dynamically
+    # Look for a folder that contains 'cardboard' subfolder
+    def find_image_root(base):
+        for p in Path(base).rglob("cardboard"):
+            if p.is_dir():
+                return p.parent
+        return Path(base)
+
+    actual_root = find_image_root(DATASET_ROOT)
+
+    # Remap old absolute paths → new paths
     index = {}
     for old_path, features in raw_index.items():
         p = Path(old_path)
-        # Extract just: cardboard/cardboard1.jpg
         cat = p.parent.name
         fname = p.name
-        new_path = str(DATASET_ROOT / "Garbage classification" / cat / fname)
+        new_path = str(actual_root / cat / fname)
         index[new_path] = features
 
     categories = {}
