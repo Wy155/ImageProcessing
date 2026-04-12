@@ -565,22 +565,19 @@ with tab_search:
                         if current == 'rel':
                             bcols[0].markdown('<div style="background:#22c55e;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👍</div>', unsafe_allow_html=True)
                         else:
-                            bcols[0].markdown('<div style="text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👍</div>', unsafe_allow_html=True)
-                            if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}', use_container_width=True):
+                            if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}'):
                                 st.session_state.feedback[i] = 'rel'
                                 st.rerun()
-                        
                         if current == 'nrel':
                             bcols[1].markdown('<div style="background:#ef4444;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👎</div>', unsafe_allow_html=True)
                         else:
-                            bcols[1].markdown('<div style="text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👎</div>', unsafe_allow_html=True)
-                            if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}', use_container_width=True):
+                            if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}'):
                                 st.session_state.feedback[i] = 'nrel'
                                 st.rerun()
-                        
-                        if bcols[2].button('✖', key=f'clear_{i}_{st.session_state.rocchio_round}', use_container_width=True):
+                        if bcols[2].button('✖', key=f'clear_{i}_{st.session_state.rocchio_round}'):
                             st.session_state.feedback[i] = None
                             st.rerun()
+
 
             st.markdown('---')
             n_rel  = sum(1 for v in st.session_state.feedback.values() if v == 'rel')
