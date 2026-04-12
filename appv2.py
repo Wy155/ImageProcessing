@@ -315,15 +315,29 @@ def rocchio_refine(q_feat, relevant_paths, nonrelevant_paths, index):
 # INDEX LOADING
 # ═══════════════════════════════════════════════════════════════════
 @st.cache_resource(show_spinner='Loading CBIR index...')
+@st.cache_resource(show_spinner='Loading CBIR index...')
 def load_index(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
-    index = data['index']
+    
+    raw_index = data['index']
     norm_params = data['norm_params']
+    
+    # Remap old absolute paths → new absolute paths using DATASET_ROOT
+    index = {}
+    for old_path, features in raw_index.items():
+        p = Path(old_path)
+        # Extract just: cardboard/cardboard1.jpg
+        cat = p.parent.name
+        fname = p.name
+        new_path = str(DATASET_ROOT / cat / fname)
+        index[new_path] = features
+
     categories = {}
     for p in index.keys():
         cat = Path(p).parent.name.lower()
         categories.setdefault(cat, []).append(p)
+
     return index, norm_params, categories
 
 
