@@ -315,7 +315,6 @@ def rocchio_refine(q_feat, relevant_paths, nonrelevant_paths, index):
 # INDEX LOADING
 # ═══════════════════════════════════════════════════════════════════
 @st.cache_resource(show_spinner='Loading CBIR index...')
-@st.cache_resource(show_spinner='Loading CBIR index...')
 def load_index(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
@@ -330,7 +329,7 @@ def load_index(path):
         # Extract just: cardboard/cardboard1.jpg
         cat = p.parent.name
         fname = p.name
-        new_path = str(DATASET_ROOT / cat / fname)
+        new_path = str(DATASET_ROOT / "Garbage classification" / cat / fname)
         index[new_path] = features
 
     categories = {}
