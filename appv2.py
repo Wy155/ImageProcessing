@@ -562,18 +562,21 @@ with tab_search:
 
                         current = st.session_state.feedback.get(i)
                         bcols = st.columns(3)
-                        if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}',
-                                           type='primary' if current == 'rel' else 'secondary',
-                                           use_container_width=True):
-                            st.session_state.feedback[i] = 'rel'
-                            st.rerun()
-                        if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}',
-                                           type='primary' if current == 'nrel' else 'secondary',
-                                           use_container_width=True):
-                            st.session_state.feedback[i] = 'nrel'
-                            st.rerun()
-                        if bcols[2].button('✖', key=f'clear_{i}_{st.session_state.rocchio_round}',
-                                           use_container_width=True):
+                        if current == 'rel':
+                            bcols[0].markdown('<div style="background:#22c55e;color:white;text-align:center;border-radius:6px;padding:4px;font-size:18px">👍</div>', unsafe_allow_html=True)
+                        else:
+                            if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}', use_container_width=True):
+                                st.session_state.feedback[i] = 'rel'
+                                st.rerun()
+                        
+                        if current == 'nrel':
+                            bcols[1].markdown('<div style="background:#ef4444;color:white;text-align:center;border-radius:6px;padding:4px;font-size:18px">👎</div>', unsafe_allow_html=True)
+                        else:
+                            if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}', use_container_width=True):
+                                st.session_state.feedback[i] = 'nrel'
+                                st.rerun()
+                        
+                        if bcols[2].button('✖', key=f'clear_{i}_{st.session_state.rocchio_round}', use_container_width=True):
                             st.session_state.feedback[i] = None
                             st.rerun()
 
