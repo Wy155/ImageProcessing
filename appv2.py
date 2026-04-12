@@ -544,13 +544,6 @@ with tab_search:
             n_cols = 5
             results = st.session_state.results
             rows = (len(results) + n_cols - 1) // n_cols
-
-            st.markdown("""
-            <style>
-            text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6
-            }
-            </style>
-            """, unsafe_allow_html=True)
             
             for row in range(rows):
                 cols = st.columns(n_cols)
@@ -572,6 +565,7 @@ with tab_search:
                         if current == 'rel':
                             bcols[0].markdown('<div style="background:#22c55e;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👍</div>', unsafe_allow_html=True)
                         else:
+                            bcols[0].markdown('<div style="text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👍</div>', unsafe_allow_html=True)
                             if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}', use_container_width=True):
                                 st.session_state.feedback[i] = 'rel'
                                 st.rerun()
@@ -579,6 +573,7 @@ with tab_search:
                         if current == 'nrel':
                             bcols[1].markdown('<div style="background:#ef4444;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👎</div>', unsafe_allow_html=True)
                         else:
+                            bcols[1].markdown('<div style="text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👎</div>', unsafe_allow_html=True)
                             if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}', use_container_width=True):
                                 st.session_state.feedback[i] = 'nrel'
                                 st.rerun()
