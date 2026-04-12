@@ -545,6 +545,15 @@ with tab_search:
             results = st.session_state.results
             rows = (len(results) + n_cols - 1) // n_cols
 
+            st.markdown("""
+            <style>
+            div.stButton > button {
+                text-align: center;
+                justify-content: center;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
             for row in range(rows):
                 cols = st.columns(n_cols)
                 for col_idx in range(n_cols):
