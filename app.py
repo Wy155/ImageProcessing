@@ -366,9 +366,8 @@ def load_index(path):
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
 
-def read_rgb(rel_path):
-    full = DATASET_ROOT / rel_path
-    img = cv2.imread(str(full))
+def read_rgb(path):
+    img = cv2.imread(str(path))
     if img is None:
         return None
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
