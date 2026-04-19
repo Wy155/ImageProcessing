@@ -322,22 +322,6 @@ def load_index(path):
     
     raw_index = data['index']
     norm_params = data['norm_params']
-
-    # Normalize Windows paths → just the last two parts: category/filename
-    index = {}
-    for p, feat in raw_index.items():
-        # Works whether path is Windows or POSIX
-        parts = Path(p.replace('\\', '/')).parts
-        # Last two parts are always: category_folder/image_file.jpg
-        normalized = str(Path(parts[-2]) / parts[-1])
-        index[normalized] = feat
-
-    categories = {}
-    for p in index.keys():
-        cat = Path(p).parent.name.lower()
-        categories.setdefault(cat, []).append(p)
-
-    return index, norm_params, categories
     
     def find_image_root(base):
         for p in Path(base).rglob("cardboard"):
