@@ -13,12 +13,27 @@ import pickle
 import time
 from pathlib import Path
 
+import kagglehub
 import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
+@st.cache_resource(show_spinner="Downloading dataset...")
+def get_dataset_root():
+    path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
+    # Walk until we find a folder that directly contains 'cardboard'
+    for p in Path(path).rglob("cardboard"):
+        if p.is_dir():
+            return p.parent  # this is the true image root
+    return Path(path)
+
+DATASET_ROOT = get_dataset_root()
+st.sidebar.write(f"DATASET_ROOT: `{DATASET_ROOT}`")  # remove after fix confirmed
+
+# Also list what's inside:
+st.sidebar.write(list(DATASET_ROOT.iterdir()))        # remove after fix confirmed
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
@@ -333,7 +348,17 @@ def get_category(filepath):
 
 
 def read_rgb(path):
-    img = cv2.imread(str(path))
+    full = DATASET_ROOT / path
+    if not full.exists():
+        # Try searching one level deeper
+        filename = Path(path).name
+        category = Path(path).parent.name
+        matches = list(DATASET_ROOT.rglob(f"{category}/{filename}"))
+        if matches:
+            full = matches[0]
+        else:
+            return None
+    img = cv2.imread(str(full))
     if img is None:
         return None
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
