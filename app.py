@@ -5,7 +5,7 @@ Run with:
     streamlit run app.py
 
 Requires:
-    - cbir_index_v2.pkl (built by the notebook)
+    - cbir_index.pkl (built by the notebook)
     - The TrashNet dataset images at the paths stored in the pickle
 """
 import os
@@ -18,22 +18,11 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import kagglehub
 
-# Download dataset automatically on Streamlit Cloud
-@st.cache_resource(show_spinner="Downloading dataset...")
-def get_dataset_root():
-    path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
-    # Find the actual image root
-    for p in Path(path).rglob("cardboard"):
-        return p.parent
-    return Path(path)
-
-DATASET_ROOT = get_dataset_root()
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
-INDEX_FILE = 'cbir_index_v2.pkl'
+INDEX_FILE = 'cbir_index.pkl'
 
 RESIZE_DIM   = (256, 256)
 H_BINS, S_BINS, V_BINS = 16, 16, 8
@@ -215,6 +204,8 @@ def extract_all_features(image_bgr):
         'lbp':        extract_lbp_features(image_bgr),
         'hog':        extract_hog_features(image_bgr),
     }
+
+
 # ═══════════════════════════════════════════════════════════════════
 # DISTANCE + RETRIEVAL
 # ═══════════════════════════════════════════════════════════════════
@@ -316,45 +307,21 @@ def rocchio_refine(q_feat, relevant_paths, nonrelevant_paths, index):
 def load_index(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
-    
-    raw_index = data['index']
+    index = data['index']
     norm_params = data['norm_params']
-
-    # Find the actual image root dynamically
-    # Look for a folder that contains 'cardboard' subfolder
-    def find_image_root(base):
-        for p in Path(base).rglob("cardboard"):
-            if p.is_dir():
-                return p.parent
-        return Path(base)
-
-    actual_root = find_image_root(DATASET_ROOT)
-
-    # Remap old absolute paths → new paths
-    index = {}
-    for old_path, features in raw_index.items():
-        # Use string replace to handle Windows backslashes on Linux
-        normalized = old_path.replace("\\", "/")
-        parts = normalized.split("/")
-        cat = parts[-2]   # cardboard
-        fname = parts[-1] # cardboard1.jpg
-        new_path = str(actual_root / cat / fname)
-        index[new_path] = features
-
     categories = {}
     for p in index.keys():
         cat = Path(p).parent.name.lower()
         categories.setdefault(cat, []).append(p)
-
     return index, norm_params, categories
+
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
 
 
-def read_rgb(rel_path):
-    full = DATASET_ROOT / rel_path
-    img = cv2.imread(str(full))
+def read_rgb(path):
+    img = cv2.imread(str(path))
     if img is None:
         return None
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -372,6 +339,69 @@ st.set_page_config(
 st.title('🔍 CBIR — Waste Classification Retrieval')
 st.caption('Content-Based Image Retrieval using HSV histogram, colour moments, '
            'GLCM, LBP and HOG features. Aligned with SDG 11 & 12.')
+
+# Green styling for the 👍 button WHEN SELECTED (kind="primary").
+# A tiny JS snippet below tags primary 👍 buttons with data-cbir-good="1",
+# and this CSS paints them green. Unselected (secondary) 👍 stays grey.
+st.markdown(
+    """
+    <style>
+    button[kind="primary"][data-cbir-good="1"] {
+        background-color: #22c55e !important;
+        border-color: #16a34a !important;
+        color: white !important;
+    }
+    button[kind="primary"][data-cbir-good="1"]:hover {
+        background-color: #16a34a !important;
+        border-color: #15803d !important;
+        color: white !important;
+    }
+    button[kind="primary"][data-cbir-good="1"]:focus,
+    button[kind="primary"][data-cbir-good="1"]:active {
+        background-color: #15803d !important;
+        border-color: #166534 !important;
+        box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.4) !important;
+        color: white !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Tiny JS: tag any primary 👍 button with data-cbir-good="1" so the CSS above applies.
+# Only tags primary buttons — secondary (unselected) stays grey by default.
+import streamlit.components.v1 as _cbir_components
+_cbir_components.html(
+    r"""
+    <script>
+    (function () {
+      const tag = () => {
+        try {
+          const doc = window.parent.document;
+          const btns = doc.querySelectorAll('div.stButton > button[kind="primary"]');
+          btns.forEach(b => {
+            const txt = (b.innerText || b.textContent || '').trim();
+            if (txt === '\u{1F44D}') {
+              b.setAttribute('data-cbir-good', '1');
+            } else {
+              b.removeAttribute('data-cbir-good');
+            }
+          });
+        } catch (e) {}
+      };
+      tag();
+      try {
+        const obs = new MutationObserver(tag);
+        obs.observe(window.parent.document.body, {
+          childList: true, subtree: true, attributes: true,
+          attributeFilter: ['kind']
+        });
+      } catch (e) {}
+    })();
+    </script>
+    """,
+    height=0, width=0,
+)
 
 # ── Load index ─────────────────────────────────────────
 if not os.path.isfile(INDEX_FILE):
@@ -415,7 +445,7 @@ with tab_search:
 
         source = st.radio(
             'Query source',
-            ['Upload your own', 'Pick from dataset'],
+            ['Upload your own', 'Take a photo', 'Pick from dataset'],
             horizontal=True,
             key='source_radio'
         )
@@ -437,6 +467,21 @@ with tab_search:
                         st.session_state.query_bgr = img_bgr
                         st.session_state.query_path = None
                         st.session_state.query_source = f'upload:{uploaded.name}'
+                        new_query_loaded = True
+
+        elif source == 'Take a photo':
+            camera_img = st.camera_input('Take a photo of the object')
+            if camera_img is not None:
+                cam_tag = f'camera:{getattr(camera_img, "file_id", None) or camera_img.name}'
+                file_bytes = np.frombuffer(camera_img.getvalue(), np.uint8)
+                img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+                if img_bgr is None:
+                    st.error('Could not decode the captured photo.')
+                else:
+                    if st.session_state.query_source != cam_tag:
+                        st.session_state.query_bgr = img_bgr
+                        st.session_state.query_path = None
+                        st.session_state.query_source = cam_tag
                         new_query_loaded = True
 
         else:
@@ -544,7 +589,7 @@ with tab_search:
             n_cols = 5
             results = st.session_state.results
             rows = (len(results) + n_cols - 1) // n_cols
-            
+
             for row in range(rows):
                 cols = st.columns(n_cols)
                 for col_idx in range(n_cols):
@@ -561,23 +606,17 @@ with tab_search:
                         st.caption(f'**#{i+1}** · {cat} · d={dist:.3f}')
 
                         current = st.session_state.feedback.get(i)
-                        bcols = st.columns(3)
-                        if current == 'rel':
-                            bcols[0].markdown('<div style="background:#22c55e;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👍</div>', unsafe_allow_html=True)
-                        else:
-                            if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}'):
-                                st.session_state.feedback[i] = 'rel'
-                                st.rerun()
-                        if current == 'nrel':
-                            bcols[1].markdown('<div style="background:#ef4444;color:white;text-align:center;border-radius:6px;padding:6px 4px;font-size:18px;line-height:1.6">👎</div>', unsafe_allow_html=True)
-                        else:
-                            if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}'):
-                                st.session_state.feedback[i] = 'nrel'
-                                st.rerun()
-                        if bcols[2].button('✖', key=f'clear_{i}_{st.session_state.rocchio_round}'):
-                            st.session_state.feedback[i] = None
+                        bcols = st.columns(2)
+                        if bcols[0].button('👍', key=f'up_{i}_{st.session_state.rocchio_round}',
+                                           type='primary' if current == 'rel' else 'secondary',
+                                           use_container_width=True):
+                            st.session_state.feedback[i] = 'rel' if current != 'rel' else None
                             st.rerun()
-
+                        if bcols[1].button('👎', key=f'down_{i}_{st.session_state.rocchio_round}',
+                                           type='primary' if current == 'nrel' else 'secondary',
+                                           use_container_width=True):
+                            st.session_state.feedback[i] = 'nrel' if current != 'nrel' else None
+                            st.rerun()
 
             st.markdown('---')
             n_rel  = sum(1 for v in st.session_state.feedback.values() if v == 'rel')
