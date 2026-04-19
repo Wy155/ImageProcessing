@@ -28,12 +28,6 @@ def get_dataset_root():
         if p.is_dir():
             return p.parent  # this is the true image root
     return Path(path)
-
-DATASET_ROOT = get_dataset_root()
-st.sidebar.write(f"DATASET_ROOT: `{DATASET_ROOT}`")  # remove after fix confirmed
-
-# Also list what's inside:
-st.sidebar.write(list(DATASET_ROOT.iterdir()))        # remove after fix confirmed
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
@@ -348,7 +342,10 @@ def get_category(filepath):
 
 
 def read_rgb(path):
+    st.sidebar.write(f"path arg: `{path}`")   # ← remove after fix
     full = DATASET_ROOT / path
+    st.sidebar.write(f"full path: `{full}`")  # ← remove after fix
+    st.sidebar.write(f"exists: {full.exists()}")  # ← remove after fix
     if not full.exists():
         # Try searching one level deeper
         filename = Path(path).name
