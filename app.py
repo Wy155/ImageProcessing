@@ -339,7 +339,7 @@ def load_index(path):
 
     return index, norm_params, categories
     
-def find_image_root(base):
+    def find_image_root(base):
         for p in Path(base).rglob("cardboard"):
             if p.is_dir():
                 return p.parent
