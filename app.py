@@ -317,12 +317,7 @@ def load_index(path):
 
 
 def get_category(filepath):
-    p = Path(filepath)
-    parts = [x.lower() for x in p.parts]
-    for part in reversed(parts):
-        if part in categories:
-            return part
-    return p.parent.name.lower()
+    return Path(filepath).parent.name.lower()
 
 
 def read_rgb(path):
