@@ -315,22 +315,19 @@ def rocchio_refine(q_feat, relevant_paths, nonrelevant_paths, index):
 # INDEX LOADING
 # ═══════════════════════════════════════════════════════════════════
 @st.cache_resource(show_spinner='Loading CBIR index...')
-@st.cache_resource(show_spinner='Loading CBIR index...')
 def load_index(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
-    
+
     raw_index = data['index']
     norm_params = data['norm_params']
 
-    # Normalize Windows paths → just the last two parts: category/filename
     index = {}
     for p, feat in raw_index.items():
-        # Works whether path is Windows or POSIX
         parts = Path(p.replace('\\', '/')).parts
-        # Last two parts are always: category_folder/image_file.jpg
-        normalized = str(Path(parts[-2]) / parts[-1])
-        index[normalized] = feat
+        # Reconstruct as full absolute path
+        full_path = str(DATASET_ROOT / parts[-2] / parts[-1])
+        index[full_path] = feat
 
     categories = {}
     for p in index.keys():
@@ -538,14 +535,16 @@ with tab_search:
                 range(len(pool)),
                 format_func=lambda i: Path(pool[i]).name
             )
-            picked_path = pool[pick_idx]
+            picked_path = pool[pick_idx]  # now already absolute
             if st.session_state.query_source != f'dataset:{picked_path}':
-                img_bgr = cv2.imread(picked_path)
+                img_bgr = cv2.imread(str(picked_path))  # str() to be safe
                 if img_bgr is not None:
                     st.session_state.query_bgr = img_bgr
                     st.session_state.query_path = picked_path
                     st.session_state.query_source = f'dataset:{picked_path}'
                     new_query_loaded = True
+                else:
+                    st.error(f'Could not read image: {picked_path}')
 
         if new_query_loaded:
             st.session_state.results = None
