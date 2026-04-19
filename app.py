@@ -13,22 +13,12 @@ import pickle
 import time
 from pathlib import Path
 
-import kagglehub
 import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
-@st.cache_resource(show_spinner="Downloading dataset...")
-def get_dataset_root():
-    path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
-    # Find the actual image root
-    for p in Path(path).rglob("cardboard"):
-        return p.parent
-    return Path(path)
-
-DATASET_ROOT = get_dataset_root()
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
@@ -314,24 +304,29 @@ def rocchio_refine(q_feat, relevant_paths, nonrelevant_paths, index):
 # INDEX LOADING
 # ═══════════════════════════════════════════════════════════════════
 @st.cache_resource(show_spinner='Loading CBIR index...')
+@st.cache_resource(show_spinner='Loading CBIR index...')
 def load_index(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
-    index = data['index']
+    
+    raw_index = data['index']
     norm_params = data['norm_params']
+
+    # Normalize Windows paths → just the last two parts: category/filename
+    index = {}
+    for p, feat in raw_index.items():
+        # Works whether path is Windows or POSIX
+        parts = Path(p.replace('\\', '/')).parts
+        # Last two parts are always: category_folder/image_file.jpg
+        normalized = str(Path(parts[-2]) / parts[-1])
+        index[normalized] = feat
+
     categories = {}
     for p in index.keys():
         cat = Path(p).parent.name.lower()
         categories.setdefault(cat, []).append(p)
+
     return index, norm_params, categories
-
-def find_image_root(base):
-        for p in Path(base).rglob("cardboard"):
-            if p.is_dir():
-                return p.parent
-        return Path(base)
-
-actual_root = find_image_root(DATASET_ROOT)
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
