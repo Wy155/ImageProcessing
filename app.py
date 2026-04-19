@@ -325,13 +325,21 @@ def load_index(path):
         categories.setdefault(cat, []).append(p)
     return index, norm_params, categories
 
+def find_image_root(base):
+        for p in Path(base).rglob("cardboard"):
+            if p.is_dir():
+                return p.parent
+        return Path(base)
+
+    actual_root = find_image_root(DATASET_ROOT)
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
 
 
 def read_rgb(path):
-    img = cv2.imread(str(path))
+    full = DATASET_ROOT / rel_path
+    img = cv2.imread(str(full))
     if img is None:
         return None
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
