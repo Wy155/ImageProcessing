@@ -13,6 +13,7 @@ import pickle
 import time
 from pathlib import Path
 
+import kagglehub
 import cv2
 import numpy as np
 import pandas as pd
@@ -337,8 +338,7 @@ def get_category(filepath):
 
 
 def read_rgb(path):
-    full = DATASET_ROOT / rel_path
-    img = cv2.imread(str(full))
+    img = cv2.imread(str(path))
     if img is None:
         return None
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
