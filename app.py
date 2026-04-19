@@ -19,9 +19,6 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
-DATASET_ROOT = get_dataset_root()
-
-# Download dataset automatically on Streamlit Cloud
 @st.cache_resource(show_spinner="Downloading dataset...")
 def get_dataset_root():
     path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
@@ -29,6 +26,8 @@ def get_dataset_root():
     for p in Path(path).rglob("cardboard"):
         return p.parent
     return Path(path)
+
+DATASET_ROOT = get_dataset_root()
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
@@ -331,7 +330,7 @@ def find_image_root(base):
                 return p.parent
         return Path(base)
 
-    actual_root = find_image_root(DATASET_ROOT)
+actual_root = find_image_root(DATASET_ROOT)
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
