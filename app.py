@@ -20,14 +20,16 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
+
 @st.cache_resource(show_spinner="Downloading dataset...")
 def get_dataset_root():
     path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
-    # Walk until we find a folder that directly contains 'cardboard'
+    # Find the actual image root
     for p in Path(path).rglob("cardboard"):
-        if p.is_dir():
-            return p.parent  # this is the true image root
+        return p.parent
     return Path(path)
+
+DATASET_ROOT = get_dataset_root()
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — must match the notebook exactly
 # ═══════════════════════════════════════════════════════════════════
@@ -336,25 +338,36 @@ def load_index(path):
         categories.setdefault(cat, []).append(p)
 
     return index, norm_params, categories
+    
+def find_image_root(base):
+        for p in Path(base).rglob("cardboard"):
+            if p.is_dir():
+                return p.parent
+        return Path(base)
+
+    actual_root = find_image_root(DATASET_ROOT)
+
+    # Remap old absolute paths → new paths
+    index = {}
+    for old_path, features in raw_index.items():
+        p = Path(old_path)
+        cat = p.parent.name
+        fname = p.name
+        new_path = str(actual_root / cat / fname)
+        index[new_path] = features
+
+    categories = {}
+    for p in index.keys():
+        cat = Path(p).parent.name.lower()
+        categories.setdefault(cat, []).append(p)
+
+    return index, norm_params, categories
 
 def get_category(filepath):
     return Path(filepath).parent.name.lower()
 
-
-def read_rgb(path):
-    st.sidebar.write(f"path arg: `{path}`")   # ← remove after fix
-    full = DATASET_ROOT / path
-    st.sidebar.write(f"full path: `{full}`")  # ← remove after fix
-    st.sidebar.write(f"exists: {full.exists()}")  # ← remove after fix
-    if not full.exists():
-        # Try searching one level deeper
-        filename = Path(path).name
-        category = Path(path).parent.name
-        matches = list(DATASET_ROOT.rglob(f"{category}/{filename}"))
-        if matches:
-            full = matches[0]
-        else:
-            return None
+def read_rgb(rel_path):
+    full = DATASET_ROOT / rel_path
     img = cv2.imread(str(full))
     if img is None:
         return None
