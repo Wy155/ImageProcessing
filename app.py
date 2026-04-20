@@ -21,7 +21,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 
-@st.cache_resource(show_spinner="Downloading dataset...")
 def get_dataset_root():
     path = kagglehub.dataset_download("asdasdasasdas/garbage-classification")
     # Find the actual image root
