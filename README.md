@@ -55,7 +55,7 @@ The notebook handles **offline indexing and evaluation** (run once). The app han
 
 - Python 3.9 or higher
 - Dependencies:
-  - `opencv-python` (cv2) — image loading, HSV conversion, HOG, calcHist
+  - `opencv-python-headless` (cv2) — image loading, HSV conversion, HOG, calcHist
   - `numpy` — vectorised array operations, feature vectors
   - `pandas` — evaluation tables and stats dashboard
   - `matplotlib` — charts in the notebook and the app's stats tab
